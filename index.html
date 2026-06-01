@@ -38,6 +38,45 @@
         canvas {
             display: block;
         }
+        /* Overlay for Menu/Instructions */
+        #menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+        #instructions {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px #2E7D32;
+            transition: all 0.1s ease;
+        }
+        .start-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #2E7D32;
+        }
         #d-pad {
             display: none;
             grid-template-columns: repeat(3, 60px);
@@ -79,6 +118,14 @@
     <div id="score-board">Score: <span id="score">0</span></div>
     
     <div id="game-container">
+        <!-- Overlay Screen -->
+        <div id="menu-overlay">
+            <div id="instructions">
+                Use the standard arrow keys or WASD to turn.<br>
+                Eat red food to score points. Do not hit walls!
+            </div>
+            <button class="start-btn" id="start-btn">Start Game</button>
+        </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
@@ -93,8 +140,9 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+        const menuOverlay = document.getElementById("menu-overlay");
+        const startBtn = document.getElementById("start-btn");
 
-        // Responsive grid system
         const gridSize = 20;
         let tileCountX, tileCountY;
         
@@ -102,7 +150,6 @@
             const width = Math.min(window.innerWidth - 30, 400);
             const height = Math.min(window.innerHeight - 280, 400);
             
-            // Snap to nearest grid multiple
             canvas.width = Math.floor(width / gridSize) * gridSize;
             canvas.height = Math.floor(height / gridSize) * gridSize;
             
@@ -112,26 +159,43 @@
         
         resizeCanvas();
 
-        // Game State
-        let snake = [{ x: 10, y: 10 }];
-        let food = { x: 5, y: 5 };
-        let dx = 1;
-        let dy = 0;
-        let score = 0;
-        let gameInterval;
-        let gameSpeed = 150; 
-        let changingDirection = false;
+        let snake, food, dx, dy, score, gameInterval, changingDirection;
+        const gameSpeed = 150; 
+        let gameRunning = false;
+
+        function setupGameData() {
+            snake = [{ x: 10, y: 10 }];
+            food = { x: 5, y: 5 };
+            dx = 1;
+            dy = 0;
+            score = 0;
+            scoreElement.innerText = score;
+            changingDirection = false;
+            resetFood();
+        }
+
+        function init() {
+            setupGameData();
+            clearCanvas();
+            drawFood();
+            drawSnake();
+        }
 
         function startGame() {
-            resetFood();
+            if (gameRunning) return;
+            gameRunning = true;
+            menuOverlay.style.display = "none";
+            setupGameData();
             gameInterval = setInterval(update, gameSpeed);
         }
 
         function update() {
             if (hasGameEnded()) {
                 clearInterval(gameInterval);
+                gameRunning = false;
                 alert(`Game Over! Final Score: ${score}`);
-                resetGame();
+                menuOverlay.style.display = "flex";
+                init();
                 return;
             }
 
@@ -148,12 +212,9 @@
         }
 
         function drawSnake() {
-            ctx.fillStyle = "#4CAF50";
             snake.forEach((part, index) => {
-                // Head is darker green
                 if (index === 0) ctx.fillStyle = "#388E3C";
                 else ctx.fillStyle = "#4CAF50";
-                
                 ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
             });
         }
@@ -183,8 +244,6 @@
         function resetFood() {
             food.x = randomCoord(tileCountX);
             food.y = randomCoord(tileCountY);
-            
-            // Ensure food doesn't spawn on snake
             snake.forEach(part => {
                 if (part.x === food.x && part.y === food.y) resetFood();
             });
@@ -205,9 +264,8 @@
         }
 
         function changeDirection(newDx, newDy) {
-            if (changingDirection) return;
+            if (changingDirection || !gameRunning) return;
             
-            // Prevent 180-degree reverse turns
             const goingUp = dy === -1;
             const goingDown = dy === 1;
             const goingRight = dx === 1;
@@ -219,37 +277,23 @@
             if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
         }
 
-        function resetGame() {
-            snake = [{ x: 10, y: 10 }];
-            dx = 1;
-            dy = 0;
-            score = 0;
-            scoreElement.innerText = score;
-            startGame();
-        }
+        // Click / Touch events to start game
+        startBtn.addEventListener("click", startGame);
+        startBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startGame(); });
 
-        // Desktop Controls (Keyboard)
+        // Desktop Controls
         document.addEventListener("keydown", (e) => {
+            if (!gameRunning && e.key === "Enter") startGame();
             if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
             if (e.key === "ArrowDown" || e.key === "s") changeDirection(0, 1);
             if (e.key === "ArrowLeft" || e.key === "a") changeDirection(-1, 0);
             if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
         });
 
-        // Mobile Controls (D-Pad Buttons)
+        // Mobile Controls
         document.getElementById("btn-up").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, -1); });
         document.getElementById("btn-down").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, 1); });
         document.getElementById("btn-left").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(-1, 0); });
         document.getElementById("btn-right").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(1, 0); });
 
-        // Mouse click support for D-Pad testing on desktop
-        document.getElementById("btn-up").addEventListener("click", () => changeDirection(0, -1));
-        document.getElementById("btn-down").addEventListener("click", () => changeDirection(0, 1));
-        document.getElementById("btn-left").addEventListener("click", () => changeDirection(-1, 0));
-        document.getElementById("btn-right").addEventListener("click", () => changeDirection(1, 0));
-
-        // Start
-        startGame();
-    </script>
-</body>
-</html>
+        // Desktop Mouse backup controls for testing
