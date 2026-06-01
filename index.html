@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
-    <!-- Custom Favicon Added Here -->
     <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
     <style>
         * {
@@ -40,7 +39,6 @@
         canvas {
             display: block;
         }
-        /* Overlay for Menu/Instructions */
         #menu-overlay {
             position: absolute;
             top: 0;
@@ -119,7 +117,6 @@
     <div id="score-board">Score: <span id="score">0</span></div>
     
     <div id="game-container">
-        <!-- Overlay Screen -->
         <div id="menu-overlay">
             <div id="instructions">
                 Use the standard arrow keys or WASD to turn.<br>
@@ -185,15 +182,11 @@
 
         function startGame() {
             if (gameRunning) return;
-            
-            menuOverlay.style.display = "none";
             setupGameData();
+            menuOverlay.style.display = "none";
+            gameRunning = true;
             clearInterval(gameInterval); 
-            
-            setTimeout(() => {
-                gameRunning = true;
-                gameInterval = setInterval(update, gameSpeed);
-            }, 100);
+            gameInterval = setInterval(update, gameSpeed);
         }
 
         function update() {
@@ -202,7 +195,6 @@
             if (hasGameEnded()) {
                 clearInterval(gameInterval);
                 gameRunning = false;
-                
                 setTimeout(() => {
                     alert(`Game Over! Final Score: ${score}`);
                     menuOverlay.style.display = "flex";
@@ -232,6 +224,7 @@
         }
 
         function moveSnake() {
+            // FIXED: Added [0] index to accurately track array items
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -262,6 +255,7 @@
         }
 
         function hasGameEnded() {
+            // FIXED: Added [0] index to avoid reading object data as NaN
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -289,10 +283,7 @@
             if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
         }
 
-        startBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            startGame();
-        });
+        startBtn.addEventListener("click", startGame);
 
         // Desktop Controls
         document.addEventListener("keydown", (e) => {
@@ -307,3 +298,9 @@
         document.getElementById("btn-up").addEventListener("click", () => changeDirection(0, -1));
         document.getElementById("btn-down").addEventListener("click", () => changeDirection(0, 1));
         document.getElementById("btn-left").addEventListener("click", () => changeDirection(-1, 0));
+        document.getElementById("btn-right").addEventListener("click", () => changeDirection(1, 0));
+
+        init();
+    </script>
+</body>
+</html>
