@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
+    <!-- Custom Favicon Added Safely -->
     <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
     <style>
         * {
@@ -39,6 +40,7 @@
         canvas {
             display: block;
         }
+        /* Overlay Menu Styles */
         #menu-overlay {
             position: absolute;
             top: 0;
@@ -51,7 +53,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            z-index: 100;
+            z-index: 10;
             text-align: center;
             padding: 20px;
         }
@@ -117,9 +119,10 @@
     <div id="score-board">Score: <span id="score">0</span></div>
     
     <div id="game-container">
+        <!-- New Menu Overlay Box placed here -->
         <div id="menu-overlay">
             <div id="instructions">
-                Use the standard arrow keys or WASD to turn.<br>
+                Use standard Arrow keys or WASD to play on desktop.<br>
                 Eat red food to score points. Do not hit walls!
             </div>
             <button class="start-btn" id="start-btn">Start Game</button>
@@ -158,80 +161,50 @@
         
         resizeCanvas();
 
-        let snake = [];
-        let food = { x: 0, y: 0 };
+        // Game State Variables
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 5, y: 5 };
         let dx = 1;
         let dy = 0;
         let score = 0;
-        let gameInterval = null;
+        let gameInterval;
+        let gameSpeed = 150; 
         let changingDirection = false;
-        const gameSpeed = 150; 
-        let gameRunning = false;
-        let isCountingDown = false;
+        let gameRunning = false; // Prevents game from updating before delay ends
 
-        function setupGameData() {
-            snake = [{ x: 5, y: 10 }];
-            food = { x: 12, y: 10 };
-            dx = 1;
-            dy = 0;
-            score = 0;
-            scoreElement.innerText = score;
-            changingDirection = false;
-        }
-
-        function init() {
-            clearInterval(gameInterval);
-            gameRunning = false;
-            isCountingDown = false;
-            setupGameData();
-            clearCanvas();
-            drawFood();
-            drawSnake();
-            
-            startBtn.style.display = "inline-block";
-            instructions.innerHTML = "Use the standard arrow keys or WASD to turn.<br>Eat red food to score points. Do not hit walls!";
-        }
-
-        function startCountdown() {
-            if (gameRunning || isCountingDown) return;
-            isCountingDown = true;
-            
-            startBtn.style.display = "none"; 
+        // New Countdown Functionality
+        function handleStartClick() {
+            startBtn.style.display = "none"; // Hide button immediately
             let timeLeft = 2;
+            instructions.innerHTML = `<span style="font-size: 28px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
             
-            instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
-            
-            const countdownInterval = setInterval(() => {
+            const countdown = setInterval(() => {
                 timeLeft--;
                 if (timeLeft > 0) {
-                    instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
+                    instructions.innerHTML = `<span style="font-size: 28px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
                 } else {
-                    clearInterval(countdownInterval);
-                    startGame();
+                    clearInterval(countdown);
+                    menuOverlay.style.display = "none"; // Remove dark menu overlay completely
+                    gameRunning = true;
+                    startGame(); // Start loop execution safely
                 }
             }, 1000);
         }
 
         function startGame() {
-            setupGameData();
-            menuOverlay.style.display = "none";
-            gameRunning = true;
-            isCountingDown = false;
-            clearInterval(gameInterval); 
+            resetFood();
+            clearInterval(gameInterval); // Clean loose intervals
             gameInterval = setInterval(update, gameSpeed);
         }
 
         function update() {
-            if (!gameRunning) return;
+            if (!gameRunning) return; // Freeze frames if menu countdown is ticking
 
             if (hasGameEnded()) {
                 clearInterval(gameInterval);
                 gameRunning = false;
-                setTimeout(() => {
-                    alert(`Game Over! Final Score: ${score}`);
-                    menuOverlay.style.display = "flex";
-                    init();
-                }, 10);
+                alert(`Game Over! Final Score: ${score}`);
+                resetGame();
                 return;
             }
 
@@ -248,6 +221,7 @@
         }
 
         function drawSnake() {
+            ctx.fillStyle = "#4CAF50";
             snake.forEach((part, index) => {
                 if (index === 0) ctx.fillStyle = "#388E3C";
                 else ctx.fillStyle = "#4CAF50";
@@ -256,7 +230,6 @@
         }
 
         function moveSnake() {
-            // FIXED: Changed snake.x to snake[0].x to read array head position accurately
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -281,13 +254,13 @@
         function resetFood() {
             food.x = randomCoord(tileCountX);
             food.y = randomCoord(tileCountY);
+            
             snake.forEach(part => {
                 if (part.x === food.x && part.y === food.y) resetFood();
             });
         }
 
         function hasGameEnded() {
-            // FIXED: Changed snake to snake[0] to point to the head element
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -302,7 +275,7 @@
         }
 
         function changeDirection(newDx, newDy) {
-            if (changingDirection || !gameRunning) return;
+            if (changingDirection || !gameRunning) return; // Prevent parsing directions inside overlay menu
             
             const goingUp = dy === -1;
             const goingDown = dy === 1;
@@ -310,3 +283,18 @@
             const goingLeft = dx === -1;
 
             if (newDx === 1 && !goingLeft) { dx = 1; dy = 0; changingDirection = true; }
+            if (newDx === -1 && !goingRight) { dx = -1; dy = 0; changingDirection = true; }
+            if (newDy === 1 && !goingUp) { dx = 0; dy = 1; changingDirection = true; }
+            if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
+        }
+
+        function resetGame() {
+            clearInterval(gameInterval);
+            snake = [{ x: 10, y: 10 }];
+            dx = 1;
+            dy = 0;
+            score = 0;
+            scoreElement.innerText = score;
+            
+            // Re-render original static frames & show overlay button screen again
+            startBtn.style.display = "inline-block";
