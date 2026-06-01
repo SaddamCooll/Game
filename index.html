@@ -188,7 +188,6 @@
             drawFood();
             drawSnake();
             
-            // Restore default text instructions
             startBtn.style.display = "inline-block";
             instructions.innerHTML = "Use the standard arrow keys or WASD to turn.<br>Eat red food to score points. Do not hit walls!";
         }
@@ -200,12 +199,12 @@
             startBtn.style.display = "none"; 
             let timeLeft = 2;
             
-            instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Game starts in ${timeLeft}...</span>`;
+            instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
             
             const countdownInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft > 0) {
-                    instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Game starts in ${timeLeft}...</span>`;
+                    instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
                 } else {
                     clearInterval(countdownInterval);
                     startGame();
@@ -257,6 +256,7 @@
         }
 
         function moveSnake() {
+            // FIXED: Changed snake.x to snake[0].x to read array head position accurately
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -287,6 +287,7 @@
         }
 
         function hasGameEnded() {
+            // FIXED: Changed snake to snake[0] to point to the head element
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -309,4 +310,3 @@
             const goingLeft = dx === -1;
 
             if (newDx === 1 && !goingLeft) { dx = 1; dy = 0; changingDirection = true; }
-            if (newDx === -1 && !goingRight) { dx = -1; dy = 0; changingDirection = true; }
