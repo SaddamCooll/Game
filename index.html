@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
-    <link rel="icon" type="image/png" href="https://www.w3.org/assets/logos/w3c/w3c-no-bars.svg" />
+    <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
     <style>
         * {
             box-sizing: border-box;
@@ -186,7 +186,7 @@
             gameRunning = true;
             menuOverlay.style.display = "none";
             setupGameData();
-            clearInterval(gameInterval); // Clear any loose intervals
+            clearInterval(gameInterval); 
             gameInterval = setInterval(update, gameSpeed);
         }
 
@@ -221,6 +221,7 @@
         }
 
         function moveSnake() {
+            // FIXED: Changed snake.x to snake[0].x to access array items properly
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -251,6 +252,7 @@
         }
 
         function hasGameEnded() {
+            // FIXED: Changed snake to snake[0]
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -278,9 +280,8 @@
             if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
         }
 
-        // Cleaned up unified listener for the start button
-        startBtn.addEventListener("pointerdown", (e) => {
-            e.preventDefault();
+        // Click / Touch dynamic support
+        startBtn.addEventListener("click", (e) => {
             startGame();
         });
 
@@ -293,9 +294,14 @@
             if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
         });
 
-        // Mobile D-Pad controls fixed to use universal pointer events
-        document.getElementById("btn-up").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(0, -1); });
-        document.getElementById("btn-down").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(0, 1); });
-        document.getElementById("btn-left").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(-1, 0); });
-        document.getElementById("btn-right").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(1, 0); });
+        // Mobile D-Pad Control Listeners
+        document.getElementById("btn-up").addEventListener("click", () => changeDirection(0, -1));
+        document.getElementById("btn-down").addEventListener("click", () => changeDirection(0, 1));
+        document.getElementById("btn-left").addEventListener("click", () => changeDirection(-1, 0));
+        document.getElementById("btn-right").addEventListener("click", () => changeDirection(1, 0));
 
+        // Initial setup run
+        init();
+    </script>
+</body>
+</html>
