@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
+    <link rel="icon" type="image/png" href="https://www.w3.org/assets/logos/w3c/w3c-no-bars.svg" />
     <style>
         * {
             box-sizing: border-box;
@@ -45,7 +46,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -164,14 +165,13 @@
         let gameRunning = false;
 
         function setupGameData() {
-            snake = [{ x: 10, y: 10 }];
-            food = { x: 5, y: 5 };
+            snake = [{ x: 5, y: 10 }];
+            food = { x: 12, y: 10 };
             dx = 1;
             dy = 0;
             score = 0;
             scoreElement.innerText = score;
             changingDirection = false;
-            resetFood();
         }
 
         function init() {
@@ -186,6 +186,7 @@
             gameRunning = true;
             menuOverlay.style.display = "none";
             setupGameData();
+            clearInterval(gameInterval); // Clear any loose intervals
             gameInterval = setInterval(update, gameSpeed);
         }
 
@@ -277,11 +278,13 @@
             if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
         }
 
-        // Click / Touch events to start game
-        startBtn.addEventListener("click", startGame);
-        startBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startGame(); });
+        // Cleaned up unified listener for the start button
+        startBtn.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            startGame();
+        });
 
-        // Desktop Controls
+        // Desktop Key Controls
         document.addEventListener("keydown", (e) => {
             if (!gameRunning && e.key === "Enter") startGame();
             if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
@@ -290,10 +293,9 @@
             if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
         });
 
-        // Mobile Controls
-        document.getElementById("btn-up").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, -1); });
-        document.getElementById("btn-down").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, 1); });
-        document.getElementById("btn-left").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(-1, 0); });
-        document.getElementById("btn-right").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(1, 0); });
+        // Mobile D-Pad controls fixed to use universal pointer events
+        document.getElementById("btn-up").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(0, -1); });
+        document.getElementById("btn-down").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(0, 1); });
+        document.getElementById("btn-left").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(-1, 0); });
+        document.getElementById("btn-right").addEventListener("pointerdown", (e) => { e.preventDefault(); changeDirection(1, 0); });
 
-        // Desktop Mouse backup controls for testing
