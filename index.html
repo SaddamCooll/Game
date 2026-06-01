@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
+    <!-- Custom Favicon Added Here -->
     <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
     <style>
         * {
@@ -52,7 +53,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            z-index: 10;
+            z-index: 100;
             text-align: center;
             padding: 20px;
         }
@@ -72,7 +73,6 @@
             border-radius: 25px;
             cursor: pointer;
             box-shadow: 0 4px #2E7D32;
-            transition: all 0.1s ease;
         }
         .start-btn:active {
             transform: translateY(2px);
@@ -175,6 +175,8 @@
         }
 
         function init() {
+            clearInterval(gameInterval);
+            gameRunning = false;
             setupGameData();
             clearCanvas();
             drawFood();
@@ -183,20 +185,29 @@
 
         function startGame() {
             if (gameRunning) return;
-            gameRunning = true;
+            
             menuOverlay.style.display = "none";
             setupGameData();
             clearInterval(gameInterval); 
-            gameInterval = setInterval(update, gameSpeed);
+            
+            setTimeout(() => {
+                gameRunning = true;
+                gameInterval = setInterval(update, gameSpeed);
+            }, 100);
         }
 
         function update() {
+            if (!gameRunning) return;
+
             if (hasGameEnded()) {
                 clearInterval(gameInterval);
                 gameRunning = false;
-                alert(`Game Over! Final Score: ${score}`);
-                menuOverlay.style.display = "flex";
-                init();
+                
+                setTimeout(() => {
+                    alert(`Game Over! Final Score: ${score}`);
+                    menuOverlay.style.display = "flex";
+                    init();
+                }, 10);
                 return;
             }
 
@@ -221,7 +232,6 @@
         }
 
         function moveSnake() {
-            // FIXED: Changed snake.x to snake[0].x to access array items properly
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -252,7 +262,6 @@
         }
 
         function hasGameEnded() {
-            // FIXED: Changed snake to snake[0]
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -280,12 +289,12 @@
             if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
         }
 
-        // Click / Touch dynamic support
         startBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
             startGame();
         });
 
-        // Desktop Key Controls
+        // Desktop Controls
         document.addEventListener("keydown", (e) => {
             if (!gameRunning && e.key === "Enter") startGame();
             if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
@@ -294,14 +303,7 @@
             if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
         });
 
-        // Mobile D-Pad Control Listeners
+        // Mobile Controls
         document.getElementById("btn-up").addEventListener("click", () => changeDirection(0, -1));
         document.getElementById("btn-down").addEventListener("click", () => changeDirection(0, 1));
         document.getElementById("btn-left").addEventListener("click", () => changeDirection(-1, 0));
-        document.getElementById("btn-right").addEventListener("click", () => changeDirection(1, 0));
-
-        // Initial setup run
-        init();
-    </script>
-</body>
-</html>
