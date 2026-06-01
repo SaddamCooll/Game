@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Retro Snake Game</title>
-    <!-- Custom Favicon Added Safely -->
     <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
     <style>
         * {
@@ -39,44 +38,6 @@
         }
         canvas {
             display: block;
-        }
-        /* Overlay Menu Styles */
-        #menu-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            z-index: 10;
-            text-align: center;
-            padding: 20px;
-        }
-        #instructions {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        .start-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px #2E7D32;
-        }
-        .start-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #2E7D32;
         }
         #d-pad {
             display: none;
@@ -119,14 +80,6 @@
     <div id="score-board">Score: <span id="score">0</span></div>
     
     <div id="game-container">
-        <!-- New Menu Overlay Box placed here -->
-        <div id="menu-overlay">
-            <div id="instructions">
-                Use standard Arrow keys or WASD to play on desktop.<br>
-                Eat red food to score points. Do not hit walls!
-            </div>
-            <button class="start-btn" id="start-btn">Start Game</button>
-        </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
@@ -141,10 +94,8 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
-        const menuOverlay = document.getElementById("menu-overlay");
-        const startBtn = document.getElementById("start-btn");
-        const instructions = document.getElementById("instructions");
 
+        // Responsive grid system
         const gridSize = 20;
         let tileCountX, tileCountY;
         
@@ -152,6 +103,7 @@
             const width = Math.min(window.innerWidth - 30, 400);
             const height = Math.min(window.innerHeight - 280, 400);
             
+            // Snap to nearest grid multiple
             canvas.width = Math.floor(width / gridSize) * gridSize;
             canvas.height = Math.floor(height / gridSize) * gridSize;
             
@@ -161,7 +113,7 @@
         
         resizeCanvas();
 
-        // Game State Variables
+        // Game State
         let snake = [{ x: 10, y: 10 }];
         let food = { x: 5, y: 5 };
         let dx = 1;
@@ -170,39 +122,15 @@
         let gameInterval;
         let gameSpeed = 150; 
         let changingDirection = false;
-        let gameRunning = false; // Prevents game from updating before delay ends
-
-        // New Countdown Functionality
-        function handleStartClick() {
-            startBtn.style.display = "none"; // Hide button immediately
-            let timeLeft = 2;
-            instructions.innerHTML = `<span style="font-size: 28px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
-            
-            const countdown = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    instructions.innerHTML = `<span style="font-size: 28px; font-weight: bold; color: #4CAF50;">Starts in ${timeLeft}...</span>`;
-                } else {
-                    clearInterval(countdown);
-                    menuOverlay.style.display = "none"; // Remove dark menu overlay completely
-                    gameRunning = true;
-                    startGame(); // Start loop execution safely
-                }
-            }, 1000);
-        }
 
         function startGame() {
             resetFood();
-            clearInterval(gameInterval); // Clean loose intervals
             gameInterval = setInterval(update, gameSpeed);
         }
 
         function update() {
-            if (!gameRunning) return; // Freeze frames if menu countdown is ticking
-
             if (hasGameEnded()) {
                 clearInterval(gameInterval);
-                gameRunning = false;
                 alert(`Game Over! Final Score: ${score}`);
                 resetGame();
                 return;
@@ -223,8 +151,10 @@
         function drawSnake() {
             ctx.fillStyle = "#4CAF50";
             snake.forEach((part, index) => {
+                // Head is darker green
                 if (index === 0) ctx.fillStyle = "#388E3C";
                 else ctx.fillStyle = "#4CAF50";
+                
                 ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
             });
         }
@@ -255,6 +185,7 @@
             food.x = randomCoord(tileCountX);
             food.y = randomCoord(tileCountY);
             
+            // Ensure food doesn't spawn on snake
             snake.forEach(part => {
                 if (part.x === food.x && part.y === food.y) resetFood();
             });
@@ -275,8 +206,9 @@
         }
 
         function changeDirection(newDx, newDy) {
-            if (changingDirection || !gameRunning) return; // Prevent parsing directions inside overlay menu
+            if (changingDirection) return;
             
+            // Prevent 180-degree reverse turns
             const goingUp = dy === -1;
             const goingDown = dy === 1;
             const goingRight = dx === 1;
@@ -289,12 +221,27 @@
         }
 
         function resetGame() {
-            clearInterval(gameInterval);
             snake = [{ x: 10, y: 10 }];
             dx = 1;
             dy = 0;
             score = 0;
             scoreElement.innerText = score;
-            
-            // Re-render original static frames & show overlay button screen again
-            startBtn.style.display = "inline-block";
+            startGame();
+        }
+
+        // Desktop Controls (Keyboard)
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
+            if (e.key === "ArrowDown" || e.key === "s") changeDirection(0, 1);
+            if (e.key === "ArrowLeft" || e.key === "a") changeDirection(-1, 0);
+            if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
+        });
+
+        // Mobile Controls (D-Pad Buttons)
+        document.getElementById("btn-up").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, -1); });
+        document.getElementById("btn-down").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, 1); });
+        document.getElementById("btn-left").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(-1, 0); });
+        document.getElementById("btn-right").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(1, 0); });
+
+        // Mouse click support for D-Pad testing on desktop
+        document.getElementById("btn-up").addEventListener("click", ()
