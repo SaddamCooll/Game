@@ -3,245 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Retro Snake Game</title>
-    <link rel="icon" type="image/png" href="/S Logo for Favicon icon.png" />
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body {
-            background: #1a1a1a;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            color: #fff;
-            overflow: hidden;
-        }
-        #score-board {
-            font-size: 24px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        #game-container {
-            position: relative;
-            background: #000;
-            border: 4px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        canvas {
-            display: block;
-        }
-        #d-pad {
-            display: none;
-            grid-template-columns: repeat(3, 60px);
-            grid-template-rows: repeat(3, 60px);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .btn {
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px #222;
-        }
-        .btn:active {
-            background: #444;
-            box-shadow: 0 2px #222;
-            transform: translateY(2px);
-        }
-        #btn-up { grid-column: 2; grid-row: 1; }
-        #btn-left { grid-column: 1; grid-row: 2; }
-        #btn-right { grid-column: 3; grid-row: 2; }
-        #btn-down { grid-column: 2; grid-row: 3; }
-
-        @media (max-width: 768px) {
-            #d-pad {
-                display: grid;
-            }
-        }
-    </style>
+    <title>Neon Snake | Cyber Arcade</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for sleek icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
-    <div id="score-board">Score: <span id="score">0</span></div>
-    
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+    <div class="cyber-bg-effects">
+        <div class="grid-overlay"></div>
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
     </div>
 
-    <div id="d-pad">
-        <button class="btn" id="btn-up">↑</button>
-        <button class="btn" id="btn-left">←</button>
-        <button class="btn" id="btn-right">→</button>
-        <button class="btn" id="btn-down">↓</button>
-    </div>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <h1 class="neon-title" id="game-title">NEON <span class="neon-accent">SNAKE</span></h1>
+            <div class="tagline">CYBERPUNK ARCADE v1.0.0</div>
+        </header>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("score");
+        <!-- Main Content Area -->
+        <main class="game-layout">
+            <!-- Left Side: Dashboard / Stats -->
+            <section class="dashboard-panel glass-panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-gauge-high"></i> SYSTEM STATS
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-label">SCORE</span>
+                        <span class="stat-value" id="current-score">000</span>
+                    </div>
+                    <div class="stat-box highlight">
+                        <span class="stat-label">HIGH SCORE</span>
+                        <span class="stat-value" id="high-score">000</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">MULTIPLIER</span>
+                        <span class="stat-value" id="score-multiplier">1.0x</span>
+                    </div>
+                </div>
 
-        // Responsive grid system
-        const gridSize = 20;
-        let tileCountX, tileCountY;
-        
-        function resizeCanvas() {
-            const width = Math.min(window.innerWidth - 30, 400);
-            const height = Math.min(window.innerHeight - 280, 400);
-            
-            // Snap to nearest grid multiple
-            canvas.width = Math.floor(width / gridSize) * gridSize;
-            canvas.height = Math.floor(height / gridSize) * gridSize;
-            
-            tileCountX = canvas.width / gridSize;
-            tileCountY = canvas.height / gridSize;
-        }
-        
-        resizeCanvas();
+                <div class="game-info-alert" id="powerup-status">
+                    <span class="pulse-dot"></span> NO ACTIVE BUFFS
+                </div>
+            </section>
 
-        // Game State
-        let snake = [{ x: 10, y: 10 }];
-        let food = { x: 5, y: 5 };
-        let dx = 1;
-        let dy = 0;
-        let score = 0;
-        let gameInterval;
-        let gameSpeed = 150; 
-        let changingDirection = false;
+            <!-- Center: Game Board -->
+            <section class="game-arena-container">
+                <div class="canvas-wrapper">
+                    <canvas id="game-canvas" width="400" height="400"></canvas>
+                    
+                    <!-- Screens / Overlays inside Canvas Area -->
+                    <div class="canvas-overlay active" id="start-screen">
+                        <div class="overlay-content">
+                            <i class="fa-solid fa-gamepad game-icon pulse-animation"></i>
+                            <h2>SYSTEM INITIALIZED</h2>
+                            <p class="blink-text">PRESS START TO INITIATE</p>
+                            <button id="start-btn" class="cyber-btn"><span class="btn-glitch">START MISSION</span></button>
+                        </div>
+                    </div>
 
-        function startGame() {
-            resetFood();
-            gameInterval = setInterval(update, gameSpeed);
-        }
+                    <div class="canvas-overlay hidden" id="pause-screen">
+                        <div class="overlay-content">
+                            <i class="fa-solid fa-pause game-icon"></i>
+                            <h2>SYSTEM PAUSED</h2>
+                            <p>GRID FREEZE ACTIVE</p>
+                            <button id="resume-btn" class="cyber-btn secondary">RESUME</button>
+                        </div>
+                    </div>
 
-        function update() {
-            if (hasGameEnded()) {
-                clearInterval(gameInterval);
-                alert(`Game Over! Final Score: ${score}`);
-                resetGame();
-                return;
-            }
+                    <div class="canvas-overlay hidden" id="gameover-screen">
+                        <div class="overlay-content">
+                            <i class="fa-solid fa-skull game-icon skull-animation"></i>
+                            <h2 class="critical-text">SYSTEM FAILURE</h2>
+                            <p class="final-score-text">FINAL SCORE: <span id="final-score">0</span></p>
+                            <p class="highscore-alert hidden" id="new-highscore-alert"><i class="fa-solid fa-trophy"></i> NEW HIGH RECORD! <i class="fa-solid fa-trophy"></i></p>
+                            <button id="restart-btn" class="cyber-btn alert-btn"><span class="btn-glitch">REBOOT GRID</span></button>
+                        </div>
+                    </div>
+                </div>
 
-            changingDirection = false;
-            clearCanvas();
-            drawFood();
-            moveSnake();
-            drawSnake();
-        }
+                <!-- Game Controls Overlay for play state -->
+                <div class="canvas-footer-controls">
+                    <button id="quick-pause-btn" class="icon-btn" title="Pause Game"><i class="fa-solid fa-pause"></i></button>
+                    <button id="quick-sound-btn" class="icon-btn" title="Mute/Unmute"><i class="fa-solid fa-volume-high"></i></button>
+                </div>
+            </section>
 
-        function clearCanvas() {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
+            <!-- Right Side: Config Panel -->
+            <section class="config-panel glass-panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-sliders"></i> SETTINGS
+                </div>
+                <div class="config-options">
+                    <div class="config-group">
+                        <label for="difficulty-select">SPEED LEVEL</label>
+                        <select id="difficulty-select" class="cyber-select">
+                            <option value="easy">CASUAL (SLOW)</option>
+                            <option value="medium" selected>ARCADE (NORMAL)</option>
+                            <option value="hard">HYPER (FAST)</option>
+                            <option value="custom">ACCELERATING</option>
+                        </select>
+                    </div>
 
-        function drawSnake() {
-            ctx.fillStyle = "#4CAF50";
-            snake.forEach((part, index) => {
-                // Head is darker green
-                if (index === 0) ctx.fillStyle = "#388E3C";
-                else ctx.fillStyle = "#4CAF50";
+                    <div class="config-group">
+                        <label>WALL COLLISION</label>
+                        <div class="toggle-container">
+                            <button id="wall-wrap-btn" class="toggle-btn active" data-wrap="true">WRAP AROUND</button>
+                            <button id="wall-solid-btn" class="toggle-btn" data-wrap="false">SOLID WALLS</button>
+                        </div>
+                    </div>
+
+                    <div class="config-group">
+                        <label>THEME ACCENT</label>
+                        <div class="color-palette">
+                            <div class="color-dot active" data-color="neon-green" style="background-color: #39ff14;"></div>
+                            <div class="color-dot" data-color="neon-cyan" style="background-color: #00f0ff;"></div>
+                            <div class="color-dot" data-color="neon-pink" style="background-color: #ff007f;"></div>
+                            <div class="color-dot" data-color="neon-gold" style="background-color: #ffd700;"></div>
+                        </div>
+                    </div>
+                </div>
                 
-                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
-            });
-        }
+                <div class="instructions-panel">
+                    <h3>CONTROL MODULES</h3>
+                    <div class="instructions-content">
+                        <div><span class="key">W A S D</span> / <span class="key">Arrows</span> : Direction</div>
+                        <div><span class="key">Space</span> / <span class="key">Esc</span> : Pause Grid</div>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-        function moveSnake() {
-            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-            snake.unshift(head);
+        <!-- Mobile Controls: Virtual D-Pad -->
+        <div class="mobile-controls-wrapper">
+            <div class="virtual-dpad">
+                <button id="ctrl-up" class="dpad-btn up" aria-label="Up"><i class="fa-solid fa-chevron-up"></i></button>
+                <div class="dpad-row-middle">
+                    <button id="ctrl-left" class="dpad-btn left" aria-label="Left"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="dpad-center">
+                        <button id="ctrl-pause" class="dpad-center-btn" aria-label="Pause"><i class="fa-solid fa-pause"></i></button>
+                    </div>
+                    <button id="ctrl-right" class="dpad-btn right" aria-label="Right"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <button id="ctrl-down" class="dpad-btn down" aria-label="Down"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+        </div>
 
-            if (head.x === food.x && head.y === food.y) {
-                score += 10;
-                scoreElement.innerText = score;
-                resetFood();
-            } else {
-                snake.pop();
-            }
-        }
+        <footer>
+            <p>DESIGNED FOR THE MATRIX &bull; ENCRYPTED CONNECTIVITY</p>
+        </footer>
+    </div>
 
-        function drawFood() {
-            ctx.fillStyle = "#FF5252";
-            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
-        }
-
-        function randomCoord(max) {
-            return Math.floor(Math.random() * max);
-        }
-
-        function resetFood() {
-            food.x = randomCoord(tileCountX);
-            food.y = randomCoord(tileCountY);
-            
-            // Ensure food doesn't spawn on snake
-            snake.forEach(part => {
-                if (part.x === food.x && part.y === food.y) resetFood();
-            });
-        }
-
-        function hasGameEnded() {
-            const head = snake[0];
-            const hitLeftWall = head.x < 0;
-            const hitRightWall = head.x >= tileCountX;
-            const hitTopWall = head.y < 0;
-            const hitBottomWall = head.y >= tileCountY;
-
-            for (let i = 4; i < snake.length; i++) {
-                if (snake[i].x === head.x && snake[i].y === head.y) return true;
-            }
-
-            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
-        }
-
-        function changeDirection(newDx, newDy) {
-            if (changingDirection) return;
-            
-            // Prevent 180-degree reverse turns
-            const goingUp = dy === -1;
-            const goingDown = dy === 1;
-            const goingRight = dx === 1;
-            const goingLeft = dx === -1;
-
-            if (newDx === 1 && !goingLeft) { dx = 1; dy = 0; changingDirection = true; }
-            if (newDx === -1 && !goingRight) { dx = -1; dy = 0; changingDirection = true; }
-            if (newDy === 1 && !goingUp) { dx = 0; dy = 1; changingDirection = true; }
-            if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
-        }
-
-        function resetGame() {
-            snake = [{ x: 10, y: 10 }];
-            dx = 1;
-            dy = 0;
-            score = 0;
-            scoreElement.innerText = score;
-            startGame();
-        }
-
-        // Desktop Controls (Keyboard)
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
-            if (e.key === "ArrowDown" || e.key === "s") changeDirection(0, 1);
-            if (e.key === "ArrowLeft" || e.key === "a") changeDirection(-1, 0);
-            if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
-        });
-
-        // Mobile Controls (D-Pad Buttons)
-        document.getElementById("btn-up").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, -1); });
-        document.getElementById("btn-down").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(0, 1); });
-        document.getElementById("btn-left").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(-1, 0); });
-        document.getElementById("btn-right").addEventListener("touchstart", (e) => { e.preventDefault(); changeDirection(1, 0); });
-
-        // Mouse click support for D-Pad testing on desktop
-        document.getElementById("btn-up").addEventListener("click", ()
+    <!-- Main Game Logic -->
+    <script src="game.js"></script>
+</body>
+</html>
