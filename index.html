@@ -140,6 +140,7 @@
         const scoreElement = document.getElementById("score");
         const menuOverlay = document.getElementById("menu-overlay");
         const startBtn = document.getElementById("start-btn");
+        const instructions = document.getElementById("instructions");
 
         const gridSize = 20;
         let tileCountX, tileCountY;
@@ -157,9 +158,16 @@
         
         resizeCanvas();
 
-        let snake, food, dx, dy, score, gameInterval, changingDirection;
+        let snake = [];
+        let food = { x: 0, y: 0 };
+        let dx = 1;
+        let dy = 0;
+        let score = 0;
+        let gameInterval = null;
+        let changingDirection = false;
         const gameSpeed = 150; 
         let gameRunning = false;
+        let isCountingDown = false;
 
         function setupGameData() {
             snake = [{ x: 5, y: 10 }];
@@ -174,17 +182,42 @@
         function init() {
             clearInterval(gameInterval);
             gameRunning = false;
+            isCountingDown = false;
             setupGameData();
             clearCanvas();
             drawFood();
             drawSnake();
+            
+            // Restore default text instructions
+            startBtn.style.display = "inline-block";
+            instructions.innerHTML = "Use the standard arrow keys or WASD to turn.<br>Eat red food to score points. Do not hit walls!";
+        }
+
+        function startCountdown() {
+            if (gameRunning || isCountingDown) return;
+            isCountingDown = true;
+            
+            startBtn.style.display = "none"; 
+            let timeLeft = 2;
+            
+            instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Game starts in ${timeLeft}...</span>`;
+            
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    instructions.innerHTML = `<span style="font-size: 32px; font-weight: bold; color: #4CAF50;">Game starts in ${timeLeft}...</span>`;
+                } else {
+                    clearInterval(countdownInterval);
+                    startGame();
+                }
+            }, 1000);
         }
 
         function startGame() {
-            if (gameRunning) return;
             setupGameData();
             menuOverlay.style.display = "none";
             gameRunning = true;
+            isCountingDown = false;
             clearInterval(gameInterval); 
             gameInterval = setInterval(update, gameSpeed);
         }
@@ -224,7 +257,6 @@
         }
 
         function moveSnake() {
-            // FIXED: Added [0] index to accurately track array items
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
@@ -255,7 +287,6 @@
         }
 
         function hasGameEnded() {
-            // FIXED: Added [0] index to avoid reading object data as NaN
             const head = snake[0];
             const hitLeftWall = head.x < 0;
             const hitRightWall = head.x >= tileCountX;
@@ -279,28 +310,3 @@
 
             if (newDx === 1 && !goingLeft) { dx = 1; dy = 0; changingDirection = true; }
             if (newDx === -1 && !goingRight) { dx = -1; dy = 0; changingDirection = true; }
-            if (newDy === 1 && !goingUp) { dx = 0; dy = 1; changingDirection = true; }
-            if (newDy === -1 && !goingDown) { dx = 0; dy = -1; changingDirection = true; }
-        }
-
-        startBtn.addEventListener("click", startGame);
-
-        // Desktop Controls
-        document.addEventListener("keydown", (e) => {
-            if (!gameRunning && e.key === "Enter") startGame();
-            if (e.key === "ArrowUp" || e.key === "w") changeDirection(0, -1);
-            if (e.key === "ArrowDown" || e.key === "s") changeDirection(0, 1);
-            if (e.key === "ArrowLeft" || e.key === "a") changeDirection(-1, 0);
-            if (e.key === "ArrowRight" || e.key === "d") changeDirection(1, 0);
-        });
-
-        // Mobile Controls
-        document.getElementById("btn-up").addEventListener("click", () => changeDirection(0, -1));
-        document.getElementById("btn-down").addEventListener("click", () => changeDirection(0, 1));
-        document.getElementById("btn-left").addEventListener("click", () => changeDirection(-1, 0));
-        document.getElementById("btn-right").addEventListener("click", () => changeDirection(1, 0));
-
-        init();
-    </script>
-</body>
-</html>
