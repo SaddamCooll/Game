@@ -825,7 +825,6 @@ footer {
     /* Show D-pad on mobile screen size */
     .mobile-controls-wrapper {
         display: flex;
-        order: 3;
     }
 }
 
